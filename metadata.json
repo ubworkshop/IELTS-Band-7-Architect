@@ -1,0 +1,5 @@
+{
+  "name": "IELTS Band 7+ Architect",
+  "description": "An AI-powered IELTS study companion that analyzes English articles to generate structured learning guides for Speaking, Vocabulary, Reading Logic, and Syntax.",
+  "requestFramePermissions": []
+}
