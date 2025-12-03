@@ -41,9 +41,15 @@ export const VocabularySection: React.FC<Props> = ({ data }) => {
         </button>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Grid adjustment: 
+         - Mobile: 1 col
+         - SM: 2 cols
+         - LG: 2 cols (because parent container is narrow)
+         - XL: 3 cols (when parent container has enough space)
+      */}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {data.words.map((word, idx) => (
-          <div key={idx} className="group relative bg-white rounded-xl shadow-sm border border-slate-100 p-5 hover:border-amber-200 transition-colors">
+          <div key={idx} className="group relative bg-white rounded-xl shadow-sm border border-slate-100 p-5 hover:border-amber-200 transition-colors flex flex-col h-full">
             <div className="flex justify-between items-start mb-2">
               <h3 className="text-lg font-bold text-slate-800 font-serif">{word.word}</h3>
               <span className="px-2 py-1 text-xs font-medium bg-slate-100 text-slate-500 rounded-md">
@@ -53,10 +59,10 @@ export const VocabularySection: React.FC<Props> = ({ data }) => {
             <p className="text-sm text-slate-700 font-medium mb-1 leading-relaxed">
               {word.definition}
             </p>
-            <p className="text-sm text-slate-500 mb-4 leading-relaxed">
+            <p className="text-sm text-slate-500 mb-4 leading-relaxed flex-1">
               {word.definition_cn}
             </p>
-            <div className="pt-3 border-t border-slate-50">
+            <div className="pt-3 border-t border-slate-50 mt-auto">
               <div className="flex flex-wrap gap-2">
                 {word.synonyms.slice(0,3).map((syn, sIdx) => (
                   <span key={sIdx} className="inline-flex items-center gap-1 text-xs text-amber-700 bg-amber-50 px-2 py-1 rounded-full">
