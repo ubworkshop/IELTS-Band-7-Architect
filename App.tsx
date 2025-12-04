@@ -4,30 +4,91 @@ import { SpeakingSection } from './components/SpeakingSection';
 import { VocabularySection } from './components/VocabularySection';
 import { ReadingSection } from './components/ReadingSection';
 import { SyntaxSection } from './components/SyntaxSection';
+import { SettingsModal } from './components/SettingsModal';
 import { analyzeArticle } from './services/geminiService';
-import { IeltsAnalysisResponse } from './types';
-import { GraduationCap, ArrowLeft } from 'lucide-react';
+import { IeltsAnalysisResponse, AISettings, PROVIDER_NAMES } from './types';
+import { GraduationCap, ArrowLeft, Trash2, Settings as SettingsIcon } from 'lucide-react';
+
+const STORAGE_KEY = 'ielts_app_analysis_data';
+const SETTINGS_KEY = 'ielts_app_settings';
+
+// Default Settings
+const DEFAULT_SETTINGS: AISettings = {
+    provider: 'google',
+    model: 'gemini-2.5-flash',
+    apiKeys: {
+        google: process.env.API_KEY || '', // Fallback to env if available initially
+        openai: '',
+        deepseek: '',
+        moonshot: ''
+    }
+};
 
 function App() {
-  const [data, setData] = useState<IeltsAnalysisResponse | null>(null);
+  // Initialize data from local storage
+  const [data, setData] = useState<IeltsAnalysisResponse | null>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+
+  // Initialize Settings from local storage
+  const [settings, setSettings] = useState<AISettings>(() => {
+    try {
+        const saved = localStorage.getItem(SETTINGS_KEY);
+        return saved ? { ...DEFAULT_SETTINGS, ...JSON.parse(saved) } : DEFAULT_SETTINGS;
+    } catch (e) {
+        return DEFAULT_SETTINGS;
+    }
+  });
+  
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const handleAnalyze = async (text: string) => {
+    // Check if key exists for selected provider
+    if (!settings.apiKeys[settings.provider]) {
+        setIsSettingsOpen(true);
+        setError(`Please enter an API Key for ${PROVIDER_NAMES[settings.provider]} in Settings.`);
+        return;
+    }
+
     setIsLoading(true);
     setError(null);
     try {
-      const result = await analyzeArticle(text);
+      const result = await analyzeArticle(text, settings);
       setData(result);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(result));
     } catch (err: any) {
-      setError("Failed to analyze the article. Please check your text or try again later. Ensure you have set a valid API Key.");
+      setError(err.message || "Failed to analyze the article. Please check your settings and text.");
     } finally {
       setIsLoading(false);
     }
   };
 
+  const clearData = () => {
+    setData(null);
+    localStorage.removeItem(STORAGE_KEY);
+  };
+
+  const handleSaveSettings = (newSettings: AISettings) => {
+      setSettings(newSettings);
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(newSettings));
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 pb-20">
+      <SettingsModal 
+        isOpen={isSettingsOpen} 
+        onClose={() => setIsSettingsOpen(false)} 
+        settings={settings}
+        onSave={handleSaveSettings}
+      />
+
       {/* Header */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
         <div className="max-w-[1600px] mx-auto px-4 lg:px-8 h-16 flex items-center justify-between">
@@ -39,8 +100,31 @@ function App() {
               IELTS <span className="text-blue-600">Architect</span>
             </h1>
           </div>
-          <div className="text-xs font-semibold px-3 py-1 bg-amber-100 text-amber-800 rounded-full">
-            Band 7+ Edition
+          
+          <div className="flex items-center gap-3">
+             {/* Settings Button */}
+             <button
+                onClick={() => setIsSettingsOpen(true)}
+                className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors border border-slate-200"
+                title="Configure AI Models"
+             >
+                <SettingsIcon className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">{PROVIDER_NAMES[settings.provider]} ({settings.model})</span>
+             </button>
+
+            {data && (
+              <button 
+                onClick={clearData}
+                className="text-xs font-medium text-slate-500 hover:text-red-600 flex items-center gap-1 transition-colors px-2"
+                title="Clear saved analysis"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Clear
+              </button>
+            )}
+            <div className="hidden sm:block text-xs font-semibold px-3 py-1 bg-amber-100 text-amber-800 rounded-full">
+              Band 7+ Edition
+            </div>
           </div>
         </div>
       </header>

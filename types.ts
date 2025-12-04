@@ -62,3 +62,32 @@ export interface IeltsAnalysisResponse {
   reading_logic_analysis: ReadingLogicAnalysis;
   syntax_analysis: SyntaxAnalysis;
 }
+
+// --- AI Configuration Types ---
+
+export type AIProvider = 'google' | 'openai' | 'deepseek' | 'moonshot';
+
+export interface AISettings {
+  provider: AIProvider;
+  model: string;
+  apiKeys: {
+    google: string;
+    openai: string;
+    deepseek: string;
+    moonshot: string;
+  };
+}
+
+export const AVAILABLE_MODELS: Record<AIProvider, string[]> = {
+  google: ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'],
+  openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-3.5-turbo'],
+  deepseek: ['deepseek-chat', 'deepseek-reasoner'],
+  moonshot: ['moonshot-v1-8k', 'moonshot-v1-32k'],
+};
+
+export const PROVIDER_NAMES: Record<AIProvider, string> = {
+  google: 'Google Gemini',
+  openai: 'OpenAI',
+  deepseek: 'DeepSeek',
+  moonshot: 'Moonshot AI (Kimi)',
+};
